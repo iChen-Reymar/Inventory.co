@@ -1,6 +1,6 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
+import LandingPage from './components/LandingPage'
 import Signup from './components/Signup'
 import Login from './components/Login'
 import Home from './components/Home'
@@ -11,31 +11,29 @@ import Customers from './components/Customers'
 import Settings from './components/Settings'
 import ProtectedRoute from './components/ProtectedRoute'
 
-function AuthPage() {
-  const location = useLocation()
-  const [isSignup, setIsSignup] = useState(true)
-
-  // Check if we're on the login route
-  useEffect(() => {
-    if (location.pathname === '/login') {
-      setIsSignup(false) // Show login form
-    } else {
-      setIsSignup(true) // Show signup form
-    }
-  }, [location.pathname])
-
-  const toggleForm = () => {
-    setIsSignup(!isSignup)
-  }
-
+function AuthWrapper({ children }) {
   return (
-    <div className="w-full min-h-screen flex items-center justify-center p-5">
-      {isSignup ? (
-        <Signup onToggle={toggleForm} />
-      ) : (
-        <Login onToggle={toggleForm} />
-      )}
+    <div className="w-full min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900">
+      {children}
     </div>
+  )
+}
+
+function LoginPage() {
+  const navigate = useNavigate()
+  return (
+    <AuthWrapper>
+      <Login onToggle={() => navigate('/signup')} />
+    </AuthWrapper>
+  )
+}
+
+function SignupPage() {
+  const navigate = useNavigate()
+  return (
+    <AuthWrapper>
+      <Signup onToggle={() => navigate('/login')} />
+    </AuthWrapper>
   )
 }
 
@@ -44,8 +42,9 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<AuthPage />} />
-          <Route path="/login" element={<AuthPage />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
           <Route 
             path="/home" 
             element={

@@ -65,9 +65,16 @@ function Signup({ onToggle }) {
 
   return (
     <div className="w-full max-w-4xl relative px-5">
-      <div className="absolute top-5 left-5 md:top-5 md:left-5 text-2xl font-semibold text-white z-10">
-        Signup
-      </div>
+      {/* Back to Home */}
+      <button
+        onClick={() => navigate('/')}
+        className="absolute -top-12 left-5 text-blue-200 hover:text-white transition-colors flex items-center gap-2 text-sm"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Back to Home
+      </button>
       <div className="flex flex-col md:flex-row bg-white rounded-xl overflow-hidden shadow-2xl min-h-[500px]">
         {/* Left Panel - White */}
         <div className="flex-1 p-12 md:p-16 flex flex-col justify-center bg-white">

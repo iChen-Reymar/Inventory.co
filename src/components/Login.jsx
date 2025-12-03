@@ -120,6 +120,16 @@ function Login({ onToggle }) {
 
   return (
     <div className="w-full max-w-4xl relative px-5">
+      {/* Back to Home */}
+      <button
+        onClick={() => navigate('/')}
+        className="absolute -top-12 left-5 text-blue-200 hover:text-white transition-colors flex items-center gap-2 text-sm"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Back to Home
+      </button>
       <div className="flex flex-col md:flex-row bg-white rounded-xl overflow-hidden shadow-2xl min-h-[500px]">
         {/* Left Panel - White */}
         <div className="flex-1 p-12 md:p-16 flex flex-col justify-center bg-white">
@@ -172,7 +182,7 @@ function Login({ onToggle }) {
             <div className="flex flex-col items-center mb-8">
               <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 mb-4 border-4 border-white shadow-lg"></div>
               <p className="text-base text-white font-medium">
-                Reymar Oberua, CEO of The Waen
+                Reymar Obenza, CEO of Sha Store
               </p>
             </div>
             <button
