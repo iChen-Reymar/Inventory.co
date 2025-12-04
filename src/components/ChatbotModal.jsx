@@ -90,7 +90,7 @@ function ChatbotModal({ isOpen, onClose }) {
         const errorMessage = {
           id: Date.now() + 1,
           role: 'assistant',
-          content: `I'm sorry, but I'm having trouble connecting right now. ${geminiError}\n\nPlease check:\n1. Your API key is correct in .env file\n2. You've restarted the dev server after adding the key\n3. Your API key has access to Gemini 1.5 models\n4. You haven't exceeded API quota limits`
+          content: `I'm sorry, but I'm having trouble connecting right now. ${geminiError}\n\nPlease check:\n1. Your API key is correct in .env file\n2. You've restarted the dev server after adding the key\n3. Your API key has access to Gemini 1.5 Flash (free tier)\n4. You haven't exceeded API quota limits\n5. You're using a free tier API key from Google AI Studio`
         }
         setMessages(prev => [...prev, errorMessage])
         return
@@ -269,7 +269,7 @@ function ChatbotModal({ isOpen, onClose }) {
               <ol className="list-decimal list-inside ml-2 space-y-0.5">
                 <li>Add VITE_GEMINI_API_KEY=your_key to .env file</li>
                 <li>Restart dev server (npm run dev)</li>
-                <li>Free tier uses "gemini-pro" model</li>
+                <li>Free tier uses "gemini-1.5-flash" model</li>
               </ol>
             </div>
           )}

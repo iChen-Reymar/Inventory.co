@@ -105,15 +105,15 @@ function Customers() {
         onClose={() => setIsModalOpen(false)}
         onAddCustomer={handleAddCustomer}
       />
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {/* Page Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">Customers</h1>
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">Customers</h1>
           
           {/* User Profile Card */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">User Profile</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">User Profile</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Name*
@@ -166,8 +166,8 @@ function Customers() {
           )}
         </div>
 
-        {/* Customers Table */}
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        {/* Customers - Desktop Table View */}
+        <div className="hidden md:block bg-white border border-gray-200 rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -268,6 +268,82 @@ function Customers() {
               </tbody>
             </table>
           </div>
+        </div>
+
+        {/* Customers - Mobile Card View */}
+        <div className="md:hidden space-y-4">
+          {loading ? (
+            <div className="text-center py-8 text-gray-400">Loading customers...</div>
+          ) : customers.length === 0 ? (
+            <div className="text-center py-8 text-gray-400">No customers found</div>
+          ) : (
+            customers.map((customer) => (
+              <div key={customer.id} className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-xs text-gray-500">ID</p>
+                    <p className="text-sm font-mono text-gray-900">{customer.customer_id}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {getStatusBadge(customer.status)}
+                    <button 
+                      onClick={() => navigate(`/settings?userId=${customer.user_id || customer.id}`)}
+                      className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                      title="View Profile"
+                    >
+                      <svg
+                        className="w-5 h-5 text-gray-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Name</p>
+                  <p className="text-base font-medium text-gray-900">{customer.name}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Role</p>
+                  <p className="text-sm text-gray-600">{customer.role}</p>
+                </div>
+                <div className="flex flex-col gap-2 pt-2 border-t border-gray-100">
+                  {customer.status === 'pending' && (isAdmin() || user) && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleApprove(customer.id)}
+                        className="flex-1 px-3 py-2 bg-green-500 text-white text-sm rounded hover:bg-green-600 transition-colors"
+                      >
+                        ✓ Approve
+                      </button>
+                      <button
+                        onClick={() => handleReject(customer.id)}
+                        className="flex-1 px-3 py-2 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
+                      >
+                        ✗ Reject
+                      </button>
+                    </div>
+                  )}
+                  {isAdmin() && (
+                    <button
+                      onClick={() => handleDeleteCustomer(customer.id)}
+                      className="w-full px-3 py-2 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </Layout>

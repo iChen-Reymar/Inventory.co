@@ -197,31 +197,54 @@ function Products() {
         onOrderPlaced={fetchProducts}
         user={user}
       />
-      <div className="p-6">
+      <div className="p-3 sm:p-4 md:p-6">
         {/* Page Header */}
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              {categoryFilter ? `Products - ${categoryFilter}` : 'Products'}
-            </h1>
-            {categoryFilter && (
-              <button
-                onClick={() => navigate('/products', { replace: true })}
-                className="text-sm text-primary-blue hover:underline mt-1"
-              >
-                ← Show all products
-              </button>
-            )}
+        <div className="mb-4 sm:mb-6 flex flex-col gap-3 sm:gap-4">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate">
+                {categoryFilter ? `Products - ${categoryFilter}` : 'Products'}
+              </h1>
+              {categoryFilter && (
+                <button
+                  onClick={() => navigate('/products', { replace: true })}
+                  className="text-xs sm:text-sm text-primary-blue hover:underline mt-1"
+                >
+                  ← Show all products
+                </button>
+              )}
+            </div>
+            {/* Add Product Button - Mobile */}
+            <div className="flex items-center gap-2 sm:hidden">
+              {(isAdmin() || isStaff()) && (
+                <button 
+                  onClick={() => setIsModalOpen(true)}
+                  className="px-3 py-2 bg-primary-blue text-white rounded-lg text-sm font-medium hover:bg-[#357abd] transition-colors whitespace-nowrap"
+                >
+                  + Add
+                </button>
+              )}
+              {isCustomer() && (
+                <button 
+                  onClick={() => setIsOrderModalOpen(true)}
+                  className="px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors whitespace-nowrap"
+                >
+                  🛒 Order
+                </button>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-4">
+          
+          {/* Search and Actions Row */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             {/* Search Bar */}
-            <div className="relative">
+            <div className="relative flex-1">
               <input
                 type="text"
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-blue w-64"
+                className="px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-blue w-full text-base"
               />
               {searchQuery && (
                 <button
@@ -248,12 +271,13 @@ function Products() {
                 />
               </svg>
             </div>
-            <div className="flex items-center gap-3">
-              {/* Add Product Button - For Admins and Staff */}
+            
+            {/* Add Product Button - Desktop */}
+            <div className="hidden sm:flex items-center gap-3">
               {(isAdmin() || isStaff()) && (
                 <button 
                   onClick={() => setIsModalOpen(true)}
-                  className="px-4 py-2 bg-primary-blue text-white rounded-lg font-medium hover:bg-[#357abd] transition-colors"
+                  className="px-4 py-2 bg-primary-blue text-white rounded-lg font-medium hover:bg-[#357abd] transition-colors whitespace-nowrap"
                 >
                   + Add product
                 </button>
@@ -263,7 +287,7 @@ function Products() {
               {isCustomer() && (
                 <button 
                   onClick={() => setIsOrderModalOpen(true)}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors whitespace-nowrap"
                 >
                   🛒 Place Order
                 </button>
@@ -272,8 +296,8 @@ function Products() {
           </div>
         </div>
 
-        {/* Products Table */}
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        {/* Products - Desktop Table View */}
+        <div className="hidden md:block bg-white border border-gray-200 rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -366,6 +390,85 @@ function Products() {
               </tbody>
             </table>
           </div>
+        </div>
+
+        {/* Products - Mobile Card View */}
+        <div className="md:hidden space-y-3">
+          {loading ? (
+            <div className="text-center py-8 text-gray-400">Loading products...</div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="text-center py-8 text-gray-400">
+              {searchQuery 
+                ? `No products found matching "${searchQuery}"`
+                : categoryFilter 
+                  ? `No products found in ${categoryFilter} category`
+                  : 'No products found'
+              }
+            </div>
+          ) : (
+            filteredProducts.map((product) => (
+              <div key={product.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                {/* Product Image and Header */}
+                <div className="relative">
+                  <div className="w-full h-48 bg-gray-200 overflow-hidden">
+                    <img
+                      src={product.image || '/images/Fender-P-Bass-electric-guitar.webp'}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.src = `https://via.placeholder.com/400x300?text=${product.name.charAt(0)}`
+                      }}
+                    />
+                  </div>
+                  <div className="absolute top-2 right-2">
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(product.status)}`}>
+                      {product.status}
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Product Info */}
+                <div className="p-4 space-y-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base font-semibold text-gray-900 leading-tight break-words">{product.name}</h3>
+                    <p className="text-sm text-gray-500 mt-1">{product.category_name || product.category}</p>
+                  </div>
+                  
+                  {/* Price and Stock */}
+                  <div className="flex justify-between items-center pt-3 border-t border-gray-100">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Price</p>
+                      <p className="text-xl font-bold text-gray-900">₱{parseFloat(product.price || 0).toFixed(2)}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-500 mb-1">Stock</p>
+                      <p className="text-xl font-bold text-gray-900">{product.stock}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  {(isAdmin() || isStaff()) && (
+                    <div className="flex items-center gap-2 pt-2">
+                      <button
+                        onClick={() => handleEditProduct(product)}
+                        className="flex-1 px-4 py-2.5 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 active:bg-blue-700 transition-colors min-h-[44px]"
+                      >
+                        Edit
+                      </button>
+                      {isAdmin() && (
+                        <button
+                          onClick={() => handleDeleteProduct(product.id)}
+                          className="flex-1 px-4 py-2.5 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 active:bg-red-700 transition-colors min-h-[44px]"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </Layout>

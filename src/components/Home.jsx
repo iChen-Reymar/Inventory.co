@@ -72,11 +72,11 @@ function Home() {
 
   return (
     <Layout pageTitle="home">
-      <div className="p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div className="p-4 sm:p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
             {/* Stock Numbers Widget */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">Stock numbers</h2>
+            <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">Stock numbers</h2>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Low stock</span>
@@ -94,9 +94,9 @@ function Home() {
             </div>
 
             {/* Top Categories Widget */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-gray-900">Top categories</h2>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900">Top categories</h2>
                 <button
                   onClick={() => navigate('/categories')}
                   className="text-primary-blue hover:underline text-sm font-medium cursor-pointer"
@@ -105,7 +105,7 @@ function Home() {
                 </button>
               </div>
               {loading ? (
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                   {[1, 2, 3, 4].map((i) => (
                     <div key={i} className="aspect-square bg-gray-200 rounded-lg animate-pulse"></div>
                   ))}
@@ -115,7 +115,7 @@ function Home() {
                   No categories found. Add categories to see them here.
                 </div>
               ) : (
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                   {topCategories.map((category) => (
                     <button
                       key={category.id}
@@ -144,9 +144,9 @@ function Home() {
           </div>
 
           {/* All Orders Widget */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900">
                 {isAdmin() || isStaff() ? 'All orders' : 'My orders'}
               </h2>
               {(isAdmin() || isStaff()) && (
@@ -155,7 +155,9 @@ function Home() {
                 </a>
               )}
             </div>
-            <div className="overflow-x-auto">
+            
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
@@ -198,6 +200,44 @@ function Home() {
                   )}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-3">
+              {loading ? (
+                <div className="text-center py-8 text-gray-400">Loading orders...</div>
+              ) : orders.length === 0 ? (
+                <div className="text-center py-8 text-gray-400">No orders found</div>
+              ) : (
+                orders.slice(0, 5).map((order) => (
+                  <div key={order.id} className="border border-gray-200 rounded-lg p-4 space-y-2">
+                    {(isAdmin() || isStaff()) && (
+                      <div>
+                        <span className="text-xs text-gray-500">Customer:</span>
+                        <p className="text-sm font-medium text-gray-900">
+                          {order.customers?.name || order.customers?.email || 'N/A'}
+                        </p>
+                      </div>
+                    )}
+                    <div>
+                      <span className="text-xs text-gray-500">Product:</span>
+                      <p className="text-sm font-medium text-gray-900">{order.product_name}</p>
+                    </div>
+                    <div className="flex justify-between">
+                      <div>
+                        <span className="text-xs text-gray-500">Quantity:</span>
+                        <p className="text-sm font-medium text-gray-900">{order.quantity}</p>
+                      </div>
+                      <div>
+                        <span className="text-xs text-gray-500">Date:</span>
+                        <p className="text-sm font-medium text-gray-900">
+                          {new Date(order.order_date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
       </div>

@@ -13,7 +13,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 
 function AuthWrapper({ children }) {
   return (
-    <div className="w-full min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900">
+    <div className="w-full min-h-screen flex items-center justify-center p-4 sm:p-5 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900">
       {children}
     </div>
   )

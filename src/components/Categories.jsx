@@ -166,11 +166,11 @@ function Categories() {
         onAddCategory={handleCategorySubmit}
         editingCategory={editingCategory}
       />
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {/* Page Header */}
-        <div className="mb-6 flex items-start justify-between">
+        <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Categories</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Categories</h1>
             <p className="text-sm text-gray-500">{getLastUpdate()}</p>
           </div>
           {(isAdmin() || isStaff()) && (

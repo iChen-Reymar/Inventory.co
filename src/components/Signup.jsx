@@ -75,10 +75,10 @@ function Signup({ onToggle }) {
         </svg>
         Back to Home
       </button>
-      <div className="flex flex-col md:flex-row bg-white rounded-xl overflow-hidden shadow-2xl min-h-[500px]">
+      <div className="flex flex-col md:flex-row bg-white rounded-xl overflow-hidden shadow-2xl min-h-[500px] w-full">
         {/* Left Panel - White */}
-        <div className="flex-1 p-12 md:p-16 flex flex-col justify-center bg-white">
-          <div className="text-3xl font-bold text-primary-blue mb-10 text-center">
+        <div className="flex-1 p-6 sm:p-12 md:p-16 flex flex-col justify-center bg-white">
+          <div className="text-2xl sm:text-3xl font-bold text-primary-blue mb-6 sm:mb-10 text-center">
             Inventory.oc
           </div>
           <form onSubmit={handleSubmit} className="flex flex-col gap-5 w-full">
@@ -135,9 +135,9 @@ function Signup({ onToggle }) {
           </form>
         </div>
         {/* Right Panel - Blue */}
-        <div className="flex-1 p-12 md:p-16 flex flex-col justify-center bg-primary-blue text-white">
+        <div className="flex-1 p-6 sm:p-12 md:p-16 flex flex-col justify-center bg-primary-blue text-white">
           <div className="flex flex-col items-center text-center">
-            <p className="text-lg leading-relaxed mb-8 text-white">
+            <p className="text-base sm:text-lg leading-relaxed mb-6 sm:mb-8 text-white">
               To keep connect with us please log in with your personal info
             </p>
             <button

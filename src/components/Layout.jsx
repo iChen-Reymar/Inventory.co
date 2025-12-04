@@ -15,6 +15,8 @@ function Layout({ children, pageTitle = 'home' }) {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
   const [notificationCount, setNotificationCount] = useState(0)
   const [isChatbotOpen, setIsChatbotOpen] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [showMobileSearch, setShowMobileSearch] = useState(false)
   
   // Global search state
   const [searchQuery, setSearchQuery] = useState('')
@@ -197,15 +199,25 @@ function Layout({ children, pageTitle = 'home' }) {
   }
 
   return (
-    <div className="h-screen w-screen bg-gray-800 flex overflow-hidden">
+    <div className="h-screen w-screen bg-gray-800 flex overflow-hidden max-w-full">
+      {/* Mobile Overlay */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+      
       {/* Sidebar */}
-      <div className="w-64 bg-primary-blue flex flex-col">
+      <aside className={`fixed lg:static inset-y-0 left-0 w-64 bg-primary-blue flex flex-col z-50 transform transition-transform duration-300 ease-in-out ${
+        isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      }`}>
         {/* Navigation Links */}
         <div className="flex-1 pt-8 px-6">
           <nav className="space-y-6">
             <a 
               href="/home" 
-              onClick={(e) => { e.preventDefault(); navigate('/home') }}
+              onClick={(e) => { e.preventDefault(); navigate('/home'); setIsSidebarOpen(false) }}
               className={`flex items-center text-white hover:opacity-80 transition-opacity ${isActive('/home') ? 'bg-white bg-opacity-20 rounded-lg px-3 py-2' : ''}`}
             >
               <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -215,7 +227,7 @@ function Layout({ children, pageTitle = 'home' }) {
             </a>
             <a  
               href="/products" 
-              onClick={(e) => { e.preventDefault(); navigate('/products') }}
+              onClick={(e) => { e.preventDefault(); navigate('/products'); setIsSidebarOpen(false) }}
               className={`flex items-center text-white hover:opacity-80 transition-opacity ${isActive('/products') ? 'bg-white bg-opacity-20 rounded-lg px-3 py-2' : ''}`}
             >
               <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -225,7 +237,7 @@ function Layout({ children, pageTitle = 'home' }) {
             </a>
             <a 
               href="/categories" 
-              onClick={(e) => { e.preventDefault(); navigate('/categories') }}
+              onClick={(e) => { e.preventDefault(); navigate('/categories'); setIsSidebarOpen(false) }}
               className={`flex items-center text-white hover:opacity-80 transition-opacity ${isActive('/categories') ? 'bg-white bg-opacity-20 rounded-lg px-3 py-2' : ''}`}
             >
               <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -237,7 +249,7 @@ function Layout({ children, pageTitle = 'home' }) {
               <>
                 <a 
                   href="/staffs" 
-                  onClick={(e) => { e.preventDefault(); navigate('/staffs') }}
+                  onClick={(e) => { e.preventDefault(); navigate('/staffs'); setIsSidebarOpen(false) }}
                   className={`flex items-center text-white hover:opacity-80 transition-opacity ${isActive('/staffs') ? 'bg-white bg-opacity-20 rounded-lg px-3 py-2' : ''}`}
                 >
                   <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -247,7 +259,7 @@ function Layout({ children, pageTitle = 'home' }) {
                 </a>
                 <a 
                   href="/customers" 
-                  onClick={(e) => { e.preventDefault(); navigate('/customers') }}
+                  onClick={(e) => { e.preventDefault(); navigate('/customers'); setIsSidebarOpen(false) }}
                   className={`flex items-center text-white hover:opacity-80 transition-opacity ${isActive('/customers') ? 'bg-white bg-opacity-20 rounded-lg px-3 py-2' : ''}`}
                 >
                   <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -280,21 +292,62 @@ function Layout({ children, pageTitle = 'home' }) {
             → Logout
           </button>
         </div>
-      </div>
+      </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header */}
         <header className="bg-white shadow-sm">
-          <div className="px-6 py-4 flex items-center justify-between">
+          <div className="px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="lg:hidden p-2 min-w-[44px] min-h-[44px] rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center"
+              aria-label="Toggle menu"
+            >
+              <svg
+                className="w-6 h-6 text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                {isSidebarOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
+            
             {/* Logo */}
-            <div className="text-2xl font-bold text-primary-blue">
+            <div className="text-xl sm:text-2xl font-bold text-primary-blue flex-1 lg:flex-none">
               Inventory.oc
             </div>
 
-            {/* Global Search Bar */}
-            <div className="flex-1 max-w-md mx-8" ref={searchRef}>
-              <div className="relative">
+            {/* Mobile Search Button */}
+            <button
+              onClick={() => setShowMobileSearch(!showMobileSearch)}
+              className="md:hidden p-2 min-w-[44px] min-h-[44px] hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center"
+              aria-label="Search"
+            >
+              <svg
+                className="w-6 h-6 text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </button>
+
+            {/* Global Search Bar - Desktop */}
+            <div className="hidden md:flex flex-1 max-w-md mx-4 lg:mx-8" ref={searchRef}>
+              <div className="relative w-full">
                 <input
                   type="text"
                   placeholder="Search products, categories, customers..."
@@ -365,13 +418,13 @@ function Layout({ children, pageTitle = 'home' }) {
             </div>
 
             {/* User Actions */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               {/* Notification Icon - Only for Admin and Staff */}
               {(isAdmin() || isStaff()) && (
                 <div className="relative">
                   <button 
                     onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                    className="p-2 hover:bg-gray-100 rounded-full transition-colors relative"
+                    className="p-2 min-w-[44px] min-h-[44px] hover:bg-gray-100 rounded-full transition-colors relative flex items-center justify-center"
                     title="Stock Alerts"
                   >
                     <svg
@@ -404,7 +457,7 @@ function Layout({ children, pageTitle = 'home' }) {
               {/* Profile/Settings Icon - Visible for all authenticated users */}
               <button 
                 onClick={() => navigate('/settings')}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 min-w-[44px] min-h-[44px] hover:bg-gray-100 rounded-full transition-colors flex items-center justify-center"
                 title="Profile & Settings"
               >
                 <svg
@@ -425,8 +478,67 @@ function Layout({ children, pageTitle = 'home' }) {
           </div>
         </header>
 
+        {/* Mobile Search Bar */}
+        {showMobileSearch && (
+          <div className="md:hidden bg-white border-b border-gray-200 px-4 py-3" ref={searchRef}>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search products, categories, customers..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => searchQuery.trim() && searchResults.length > 0 && setShowSearchResults(true)}
+                className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-blue text-base"
+                id="mobile-search-input"
+              />
+              <button
+                onClick={() => setShowMobileSearch(false)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              {isSearching && (
+                <div className="absolute right-12 top-1/2 transform -translate-y-1/2">
+                  <div className="w-5 h-5 border-2 border-primary-blue border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              )}
+              {/* Mobile Search Results */}
+              {showSearchResults && searchResults.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+                  {searchResults.map((result, index) => (
+                    <button
+                      key={`${result.type}-${result.id}-${index}`}
+                      onClick={() => {
+                        handleSearchResultClick(result)
+                        setShowMobileSearch(false)
+                      }}
+                      className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors text-left border-b border-gray-100 last:border-b-0"
+                    >
+                      <span className="text-2xl">{result.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 truncate">{result.title}</p>
+                        <p className="text-sm text-gray-500 truncate">{result.subtitle}</p>
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        result.type === 'product' ? 'bg-blue-100 text-blue-700' :
+                        result.type === 'category' ? 'bg-green-100 text-green-700' :
+                        result.type === 'customer' ? 'bg-purple-100 text-purple-700' :
+                        'bg-orange-100 text-orange-700'
+                      }`}>
+                        {result.type}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Main Content Area */}
-        <main className="flex-1 bg-gray-100 overflow-y-auto">
+        <main className="flex-1 bg-gray-100 overflow-y-auto overflow-x-hidden min-w-0">
           {children}
         </main>
       </div>
@@ -441,10 +553,10 @@ function Layout({ children, pageTitle = 'home' }) {
       {!isChatbotOpen && (
         <button
           onClick={() => setIsChatbotOpen(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-primary-blue to-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center z-40"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-primary-blue to-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 flex items-center justify-center z-40"
           title="AI Assistant"
         >
-          <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
           </svg>
         </button>

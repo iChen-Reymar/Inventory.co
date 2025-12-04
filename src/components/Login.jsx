@@ -130,10 +130,10 @@ function Login({ onToggle }) {
         </svg>
         Back to Home
       </button>
-      <div className="flex flex-col md:flex-row bg-white rounded-xl overflow-hidden shadow-2xl min-h-[500px]">
+      <div className="flex flex-col md:flex-row bg-white rounded-xl overflow-hidden shadow-2xl min-h-[500px] w-full">
         {/* Left Panel - White */}
-        <div className="flex-1 p-12 md:p-16 flex flex-col justify-center bg-white">
-          <div className="text-3xl font-bold text-primary-blue mb-10 text-center">
+        <div className="flex-1 p-6 sm:p-12 md:p-16 flex flex-col justify-center bg-white">
+          <div className="text-2xl sm:text-3xl font-bold text-primary-blue mb-6 sm:mb-10 text-center">
             Inventory.oc
           </div>
           <form onSubmit={handleSubmit} className="flex flex-col gap-5 w-full">
@@ -174,18 +174,18 @@ function Login({ onToggle }) {
           </form>
         </div>
         {/* Right Panel - Blue */}
-        <div className="flex-1 p-12 md:p-16 flex flex-col justify-center bg-primary-blue text-white">
+        <div className="flex-1 p-6 sm:p-12 md:p-16 flex flex-col justify-center bg-primary-blue text-white">
           <div className="flex flex-col items-center text-center">
-            <p className="text-xl italic leading-relaxed mb-10 text-white">
+            <p className="text-base sm:text-xl italic leading-relaxed mb-6 sm:mb-10 text-white">
               "Using Inventory.oc changes the way we work. We are now effortless and effective"
             </p>
-            <div className="flex flex-col items-center mb-8">
+            <div className="flex flex-col items-center mb-6 sm:mb-8">
               <img 
                 src="/images/ceo-photo.jpg" 
                 alt="Reymar Obenza"
-                className="w-20 h-20 rounded-full object-cover mb-4 border-4 border-white shadow-lg"
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover mb-3 sm:mb-4 border-4 border-white shadow-lg"
               />
-              <p className="text-base text-white font-medium">
+              <p className="text-sm sm:text-base text-white font-medium">
                 Reymar Obenza, CEO of Sha Store
               </p>
             </div>
