@@ -289,12 +289,12 @@ export const AuthProvider = ({ children }) => {
   const isAdmin = () => {
     const role = profile?.role
     console.log('Checking admin status - Profile:', profile, 'Role:', role) // Debug log
-    // Check both 'Admin' and 'Manager' roles (case-sensitive)
-    return role === 'Admin' || role === 'Manager'
+    // Check 'Admin' role (case-sensitive)
+    return role === 'Admin'
   }
 
   const isStaff = () => {
-    return profile?.role === 'Staff' || profile?.role === 'Manager' || profile?.role === 'Admin'
+    return profile?.role === 'Staff' || profile?.role === 'Admin'
   }
 
   const value = {

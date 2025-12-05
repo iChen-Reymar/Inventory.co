@@ -40,7 +40,7 @@ function AddStaffModal({ isOpen, onClose, onAddStaff, editingStaff }) {
     }
   }, [editingStaff, isOpen])
 
-  const roles = ['Staff', 'Manager', 'Admin']
+  const roles = ['Staff', 'Admin']
 
   const handleSearch = async (e) => {
     e.preventDefault()

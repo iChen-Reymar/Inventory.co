@@ -13,6 +13,8 @@ A modern inventory management system built with React, Vite, and Supabase, featu
 - **Settings**: User profile and permission management
 - **Responsive Design**: Works on desktop and mobile devices
 - **Modern UI**: Clean white and blue color scheme with Tailwind CSS
+- **Progressive Web App (PWA)**: Installable as an app on any device
+- **Offline Support**: Basic caching and offline functionality
 
 ## Getting Started
 
@@ -138,7 +140,7 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ## Security
 
 - Row Level Security (RLS) enabled on all tables
-- Role-based access control (Admin, Manager, Staff, Customer)
+- Role-based access control (Admin, Staff, Customer)
 - Secure authentication via Supabase Auth
 - Environment variables for sensitive data
 

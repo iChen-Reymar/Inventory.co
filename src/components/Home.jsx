@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from './Layout'
+import AllOrdersModal from './AllOrdersModal'
 import { categoryService } from '../services/categoryService'
 import { productService } from '../services/productService'
 import { orderService } from '../services/orderService'
@@ -13,6 +14,7 @@ function Home() {
   const [lowStockCount, setLowStockCount] = useState(0)
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
+  const [isAllOrdersModalOpen, setIsAllOrdersModalOpen] = useState(false)
 
   // Fetch categories and stock data
   useEffect(() => {
@@ -72,6 +74,10 @@ function Home() {
 
   return (
     <Layout pageTitle="home">
+      <AllOrdersModal
+        isOpen={isAllOrdersModalOpen}
+        onClose={() => setIsAllOrdersModalOpen(false)}
+      />
       <div className="p-4 sm:p-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
             {/* Stock Numbers Widget */}
@@ -150,9 +156,12 @@ function Home() {
                 {isAdmin() || isStaff() ? 'All orders' : 'My orders'}
               </h2>
               {(isAdmin() || isStaff()) && (
-                <a href="#" className="text-primary-blue hover:underline text-sm font-medium">
+                <button
+                  onClick={() => setIsAllOrdersModalOpen(true)}
+                  className="text-primary-blue hover:underline text-sm font-medium cursor-pointer"
+                >
                   VIEW ALL
-                </a>
+                </button>
               )}
             </div>
             
