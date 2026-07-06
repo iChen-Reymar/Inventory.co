@@ -6,13 +6,65 @@ import PayUtangModal from './PayUtangModal'
 import { useAuth } from '../contexts/AuthContext'
 import { statsService } from '../services/statsService'
 import { formatDateRange } from '../utils/dateRange'
-import { formatPaymentMethod, isUtangPayment, isUtangPaid, isUtangUnpaid, isUtangPartial, getUtangPaidAmount, getUtangRemaining } from '../utils/paymentMethod'
+import { formatPaymentMethod, isUtangPayment, isUtangPaid, isUtangUnpaid, isUtangPartial, getUtangPaidAmount, getUtangRemaining, parseUtangPaymentHistory, formatPartialPaymentDate } from '../utils/paymentMethod'
 
 const PERIODS = [
   { id: 'daily', label: 'Today' },
   { id: 'weekly', label: 'This Week' },
   { id: 'monthly', label: 'This Month' }
 ]
+
+const SCROLL_ITEM_LIMIT = 4
+
+function ReportCountBadge({ count, variant = 'default' }) {
+  return (
+    <span className={`report-count-badge report-count-badge--${variant}`}>
+      {count} {count === 1 ? 'item' : 'items'}
+    </span>
+  )
+}
+
+function ReportScrollHint() {
+  return (
+    <p className="report-scroll-hint">
+      <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      </svg>
+      Scroll to view all entries
+    </p>
+  )
+}
+
+function ReportScrollContainer({ count, variant = 'default', desktop, mobile }) {
+  const isScrollable = count > SCROLL_ITEM_LIMIT
+  const scrollClasses = [
+    isScrollable ? 'report-scroll-wrap report-scroll-wrap--active' : '',
+    isScrollable && variant === 'cards' ? 'report-scroll-wrap--cards' : '',
+    isScrollable && variant === 'staff' ? 'report-scroll-wrap--staff' : ''
+  ].filter(Boolean).join(' ')
+
+  const desktopWrapClass = isScrollable
+    ? `relative ${scrollClasses}`
+    : 'overflow-x-auto -mx-1 px-1'
+
+  const mobileWrapClass = isScrollable
+    ? `relative ${scrollClasses}`
+    : ''
+
+  return (
+    <>
+      {isScrollable && <ReportScrollHint />}
+      <div className={`hidden md:block ${desktopWrapClass}`}>
+        {desktop}
+        {isScrollable && <div className="report-scroll-fade" aria-hidden="true" />}
+      </div>
+      <div className={`md:hidden ${mobileWrapClass}`}>
+        <div className="space-y-3">{mobile}</div>
+        {isScrollable && <div className="report-scroll-fade" aria-hidden="true" />}
+      </div>
+    </>
+  )
+}
 
 function Reports() {
   const navigate = useNavigate()
@@ -109,14 +161,41 @@ function Reports() {
   }
 
   const renderUtangAmount = (order) => {
+    const paymentHistory = parseUtangPaymentHistory(order)
+
     if (isUtangPartial(order)) {
       return (
         <div>
           <p className="font-semibold text-amber-700">{formatMoney(getUtangRemaining(order))} left</p>
           <p className="text-xs text-green-700">{formatMoney(getUtangPaidAmount(order))} paid</p>
+          {paymentHistory.length > 0 && (
+            <div className="mt-1 space-y-0.5">
+              {paymentHistory.map((payment, index) => (
+                <p key={`${payment.paid_at}-${index}`} className="text-xs text-gray-500">
+                  Partial {formatMoney(payment.amount)} · {formatPartialPaymentDate(payment.paid_at)}
+                </p>
+              ))}
+            </div>
+          )}
         </div>
       )
     }
+
+    if (isUtangPaid(order) && paymentHistory.length > 0) {
+      return (
+        <div>
+          <span className="font-semibold text-green-700">{formatMoney(order.total_amount)}</span>
+          <div className="mt-1 space-y-0.5">
+            {paymentHistory.map((payment, index) => (
+              <p key={`${payment.paid_at}-${index}`} className="text-xs text-gray-500">
+                {paymentHistory.length > 1 ? `Payment ${index + 1}` : 'Paid'} {formatMoney(payment.amount)} · {formatPartialPaymentDate(payment.paid_at)}
+              </p>
+            ))}
+          </div>
+        </div>
+      )
+    }
+
     return <span className="font-semibold text-amber-700">{formatMoney(order.total_amount)}</span>
   }
 
@@ -173,33 +252,33 @@ function Reports() {
         </div>
 
         {summary && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <p className="text-sm text-gray-500">Today</p>
-              <p className="text-2xl font-bold text-green-600">{formatMoney(summary.daily.income)}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            <div className="report-stat-card bg-white border-gray-200">
+              <p className="text-xs sm:text-sm text-gray-500 font-medium">Today</p>
+              <p className="text-xl sm:text-2xl font-bold text-green-600 mt-1">{formatMoney(summary.daily.income)}</p>
               <p className="text-xs text-gray-500 mt-1">{summary.daily.paidTransactions} paid sales</p>
               {summary.daily.utangTotal > 0 && (
-                <p className="text-xs text-amber-700 mt-1">
+                <p className="text-xs text-amber-700 mt-1.5 font-medium">
                   Utang: {formatMoney(summary.daily.utangTotal)} ({summary.daily.utangTransactions})
                 </p>
               )}
             </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <p className="text-sm text-gray-500">This Week</p>
-              <p className="text-2xl font-bold text-primary-blue">{formatMoney(summary.weekly.income)}</p>
+            <div className="report-stat-card bg-white border-gray-200">
+              <p className="text-xs sm:text-sm text-gray-500 font-medium">This Week</p>
+              <p className="text-xl sm:text-2xl font-bold text-primary-blue mt-1">{formatMoney(summary.weekly.income)}</p>
               <p className="text-xs text-gray-500 mt-1">{summary.weekly.paidTransactions} paid sales</p>
               {summary.weekly.utangTotal > 0 && (
-                <p className="text-xs text-amber-700 mt-1">
+                <p className="text-xs text-amber-700 mt-1.5 font-medium">
                   Utang: {formatMoney(summary.weekly.utangTotal)} ({summary.weekly.utangTransactions})
                 </p>
               )}
             </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <p className="text-sm text-gray-500">This Month</p>
-              <p className="text-2xl font-bold text-indigo-600">{formatMoney(summary.monthly.income)}</p>
+            <div className="report-stat-card bg-white border-gray-200">
+              <p className="text-xs sm:text-sm text-gray-500 font-medium">This Month</p>
+              <p className="text-xl sm:text-2xl font-bold text-indigo-600 mt-1">{formatMoney(summary.monthly.income)}</p>
               <p className="text-xs text-gray-500 mt-1">{summary.monthly.paidTransactions} paid sales</p>
               {summary.monthly.utangTotal > 0 && (
-                <p className="text-xs text-amber-700 mt-1">
+                <p className="text-xs text-amber-700 mt-1.5 font-medium">
                   Utang: {formatMoney(summary.monthly.utangTotal)} ({summary.monthly.utangTransactions})
                 </p>
               )}
@@ -207,16 +286,16 @@ function Reports() {
           </div>
         )}
 
-        <div className="flex gap-2 flex-wrap items-center">
+        <div className="flex gap-2 flex-wrap items-center p-1 bg-gray-100/80 rounded-xl w-full sm:w-fit">
           {PERIODS.map((p) => (
             <button
               key={p.id}
               type="button"
               onClick={() => handlePeriodChange(p.id)}
-              className={`ui-btn px-4 text-sm ${
+              className={`report-period-btn flex-1 sm:flex-none ${
                 period === p.id
-                  ? 'bg-primary-blue text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-primary-blue text-white shadow-sm'
+                  : 'bg-transparent text-gray-700 hover:bg-white/80'
               }`}
             >
               {p.label}
@@ -225,10 +304,10 @@ function Reports() {
           <button
             type="button"
             onClick={handleOpenCalendar}
-            className={`ui-btn px-4 text-sm gap-2 max-w-full ${
+            className={`report-period-btn gap-2 max-w-full flex-1 sm:flex-none ${
               isCustomRange
-                ? 'bg-primary-blue text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-primary-blue text-white shadow-sm'
+                : 'bg-transparent text-gray-700 hover:bg-white/80'
             }`}
             title="Select custom date range"
           >
@@ -254,25 +333,25 @@ function Reports() {
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p className="text-sm text-gray-600">Paid Income</p>
-                <p className="text-2xl sm:text-3xl font-bold text-green-700">{formatMoney(report.income)}</p>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <div className="report-stat-card bg-green-50 border-green-200 col-span-1">
+                <p className="text-xs sm:text-sm text-gray-600 font-medium">Paid Income</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-700 mt-1">{formatMoney(report.income)}</p>
                 <p className="text-xs text-gray-500 mt-1">{report.paidTransactions} paid sales</p>
               </div>
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                <p className="text-sm text-gray-600">Total Utang</p>
-                <p className="text-2xl sm:text-3xl font-bold text-amber-700">{formatMoney(report.utangTotal)}</p>
+              <div className="report-stat-card bg-amber-50 border-amber-200 col-span-1">
+                <p className="text-xs sm:text-sm text-gray-600 font-medium">Total Utang</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-amber-700 mt-1">{formatMoney(report.utangTotal)}</p>
                 <p className="text-xs text-gray-500 mt-1">{report.utangTransactions} utang sales</p>
               </div>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-gray-600">Total Sales</p>
-                <p className="text-2xl sm:text-3xl font-bold text-primary-blue">{formatMoney(report.totalSales)}</p>
+              <div className="report-stat-card bg-blue-50 border-blue-200 col-span-1">
+                <p className="text-xs sm:text-sm text-gray-600 font-medium">Total Sales</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-primary-blue mt-1">{formatMoney(report.totalSales)}</p>
                 <p className="text-xs text-gray-500 mt-1">{report.transactions} all transactions</p>
               </div>
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                <p className="text-sm text-gray-600">Items Sold</p>
-                <p className="text-2xl sm:text-3xl font-bold text-purple-700">{report.itemsSold}</p>
+              <div className="report-stat-card bg-purple-50 border-purple-200 col-span-1">
+                <p className="text-xs sm:text-sm text-gray-600 font-medium">Items Sold</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-purple-700 mt-1">{report.itemsSold}</p>
               </div>
             </div>
 
@@ -284,144 +363,161 @@ function Reports() {
             )}
 
             {isAdmin() && report.byStaff?.length > 0 && (
-              <div className="ui-card">
-                <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Staff Sales Report</h2>
-                <div className="hidden lg:block overflow-x-auto">
-                  <table className="w-full ui-table">
-                    <thead>
-                      <tr className="border-b border-gray-200 text-left text-gray-600">
-                        <th>Staff</th>
-                        <th>Income</th>
-                        <th>Utang</th>
-                        <th>Transactions</th>
-                        <th>Items Sold</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {report.byStaff.map((row) => (
-                        <tr key={row.staffName} className="border-b border-gray-100">
-                          <td className="font-medium">{row.staffName}</td>
-                          <td className="text-green-700 font-semibold">{formatMoney(row.income)}</td>
-                          <td className="text-amber-700 font-semibold">{formatMoney(row.utangTotal)}</td>
-                          <td>{row.transactions}</td>
-                          <td>{row.itemsSold}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              <section className="ui-card report-section shadow-sm border-indigo-100 bg-gradient-to-br from-indigo-50/40 to-white">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-3 pb-3 border-b border-indigo-100/80">
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900">Staff Sales Report</h2>
+                  <ReportCountBadge count={report.byStaff.length} variant="staff" />
                 </div>
-                <div className="lg:hidden space-y-3">
-                  {report.byStaff.map((row) => (
+                <ReportScrollContainer
+                  count={report.byStaff.length}
+                  variant="staff"
+                  desktop={
+                    <table className="w-full ui-table report-table min-w-[32rem]">
+                      <thead>
+                        <tr className="border-b border-gray-200 text-left">
+                          <th>Staff</th>
+                          <th>Income</th>
+                          <th>Utang</th>
+                          <th>Transactions</th>
+                          <th>Items Sold</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {report.byStaff.map((row) => (
+                          <tr key={row.staffName} className="border-b border-gray-100">
+                            <td className="font-medium">{row.staffName}</td>
+                            <td className="text-green-700 font-semibold">{formatMoney(row.income)}</td>
+                            <td className="text-amber-700 font-semibold">{formatMoney(row.utangTotal)}</td>
+                            <td>{row.transactions}</td>
+                            <td>{row.itemsSold}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  }
+                  mobile={report.byStaff.map((row) => (
                     <div key={row.staffName} className="ui-mobile-card">
                       <p className="font-semibold text-gray-900">{row.staffName}</p>
-                      <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
+                      <div className="grid grid-cols-2 gap-3 mt-3 text-sm">
                         <div>
-                          <p className="text-xs text-gray-500">Income</p>
-                          <p className="text-green-700 font-semibold">{formatMoney(row.income)}</p>
+                          <p className="text-xs text-gray-500 uppercase tracking-wide">Income</p>
+                          <p className="text-green-700 font-semibold mt-0.5">{formatMoney(row.income)}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">Utang</p>
-                          <p className="text-amber-700 font-semibold">{formatMoney(row.utangTotal)}</p>
+                          <p className="text-xs text-gray-500 uppercase tracking-wide">Utang</p>
+                          <p className="text-amber-700 font-semibold mt-0.5">{formatMoney(row.utangTotal)}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">Sales</p>
-                          <p>{row.transactions}</p>
+                          <p className="text-xs text-gray-500 uppercase tracking-wide">Sales</p>
+                          <p className="mt-0.5">{row.transactions}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">Items</p>
-                          <p>{row.itemsSold}</p>
+                          <p className="text-xs text-gray-500 uppercase tracking-wide">Items</p>
+                          <p className="mt-0.5">{row.itemsSold}</p>
                         </div>
                       </div>
                     </div>
                   ))}
-                </div>
-              </div>
+                />
+              </section>
             )}
 
             {report.utangOrders?.length > 0 && (
-              <div className="ui-card border-amber-200 bg-amber-50/40">
-                <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Utang Sales</h2>
-                <div className="hidden lg:block overflow-x-auto">
-                  <table className="w-full ui-table">
-                    <thead>
-                      <tr className="border-b border-gray-200 text-left text-gray-600">
-                        <th>Date</th>
-                        <th>Name</th>
-                        <th>Product</th>
-                        <th>Qty</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                        <th>Staff</th>
-                        <th className="text-center">Pay</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {report.utangOrders.map((order) => (
-                        <tr key={order.id} className="border-b border-gray-100">
-                          <td className="whitespace-nowrap">
-                            {new Date(order.order_date).toLocaleString()}
-                          </td>
-                          <td className="font-semibold text-amber-800">{order.debtor_name || '—'}</td>
-                          <td>
-                            {order.product_name}
-                            {order.size ? <span className="text-gray-500"> · EU {order.size}</span> : null}
-                          </td>
-                          <td>{order.quantity}</td>
-                          <td>{renderUtangAmount(order)}</td>
-                          <td>{renderUtangStatus(order)}</td>
-                          <td>{order.staff_name || '—'}</td>
-                          <td className="text-center">{renderPayUtangButton(order)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              <section className="ui-card report-section shadow-sm border-amber-200 bg-gradient-to-br from-amber-50/60 to-white">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-3 pb-3 border-b border-amber-200/80">
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900">Utang Sales</h2>
+                  <ReportCountBadge count={report.utangOrders.length} variant="utang" />
                 </div>
-                <div className="lg:hidden space-y-3">
-                  {report.utangOrders.map((order) => (
-                    <div key={order.id} className="ui-mobile-card">
-                      <div className="flex justify-between gap-2 mb-1">
-                        <p className="font-semibold text-amber-800">{order.debtor_name || '—'}</p>
+                <ReportScrollContainer
+                  count={report.utangOrders.length}
+                  variant="cards"
+                  desktop={
+                    <table className="w-full ui-table report-table min-w-[48rem]">
+                      <thead>
+                        <tr className="border-b border-gray-200 text-left">
+                          <th>Date</th>
+                          <th>Name</th>
+                          <th>Product</th>
+                          <th>Qty</th>
+                          <th>Amount</th>
+                          <th>Status</th>
+                          <th>Staff</th>
+                          <th className="text-center">Pay</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {report.utangOrders.map((order) => (
+                          <tr key={order.id} className="border-b border-gray-100 align-top">
+                            <td className="whitespace-nowrap">
+                              {new Date(order.order_date).toLocaleString()}
+                            </td>
+                            <td className="font-semibold text-amber-800">{order.debtor_name || '—'}</td>
+                            <td>
+                              {order.product_name}
+                              {order.size ? <span className="text-gray-500"> · EU {order.size}</span> : null}
+                            </td>
+                            <td>{order.quantity}</td>
+                            <td className="min-w-[9rem]">{renderUtangAmount(order)}</td>
+                            <td>{renderUtangStatus(order)}</td>
+                            <td>{order.staff_name || '—'}</td>
+                            <td className="text-center">{renderPayUtangButton(order)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  }
+                  mobile={report.utangOrders.map((order) => (
+                    <div key={order.id} className="ui-mobile-card border-amber-100">
+                      <div className="flex justify-between gap-2 mb-2">
+                        <p className="font-semibold text-amber-800 truncate">{order.debtor_name || '—'}</p>
                         <div className="flex items-center gap-2 shrink-0">
                           {renderUtangStatus(order)}
                           {renderPayUtangButton(order)}
                         </div>
                       </div>
-                      <div className="mb-1">{renderUtangAmount(order)}</div>
-                      <p className="text-sm text-gray-900">{order.product_name}</p>
+                      <div className="mb-2">{renderUtangAmount(order)}</div>
+                      <p className="text-sm text-gray-900 font-medium">{order.product_name}</p>
                       <p className="text-xs text-gray-500 mt-1">{new Date(order.order_date).toLocaleString()}</p>
-                      <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
+                      <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-gray-100 text-sm">
                         <div><span className="text-gray-500">Qty:</span> {order.quantity}</div>
                         <div><span className="text-gray-500">Staff:</span> {order.staff_name || '—'}</div>
                       </div>
                     </div>
                   ))}
-                </div>
-              </div>
+                />
+              </section>
             )}
 
-            <div className="ui-card">
-              <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">All Transactions</h2>
+            <section className="ui-card report-section shadow-sm border-gray-200 bg-gradient-to-br from-slate-50/50 to-white">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-3 pb-3 border-b border-gray-100">
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900">All Transactions</h2>
+                {report.orders.length > 0 && (
+                  <ReportCountBadge count={report.orders.length} variant="transactions" />
+                )}
+              </div>
               {report.orders.length === 0 ? (
-                <p className="text-gray-500 text-sm">No sales recorded for this period.</p>
+                <p className="text-gray-500 text-sm py-6 text-center">No sales recorded for this period.</p>
               ) : (
-                <>
-                  <div className="hidden lg:block overflow-x-auto">
-                    <table className="w-full ui-table">
+                <ReportScrollContainer
+                  count={report.orders.length}
+                  variant="cards"
+                  desktop={
+                    <table className="w-full ui-table report-table min-w-[44rem]">
                       <thead>
-                        <tr className="border-b border-gray-200 text-left text-gray-600">
+                        <tr className="border-b border-gray-200 text-left">
                           <th>Date</th>
                           <th>Product</th>
                           <th>Qty</th>
                           <th>Amount</th>
                           <th>Discount</th>
-                        <th>Staff</th>
-                        <th>Payment</th>
-                        <th>Utang Name</th>
+                          <th>Staff</th>
+                          <th>Payment</th>
+                          <th>Utang Name</th>
                         </tr>
                       </thead>
                       <tbody>
                         {report.orders.map((order) => (
-                          <tr key={order.id} className="border-b border-gray-100">
+                          <tr key={order.id} className="border-b border-gray-100 align-top">
                             <td className="whitespace-nowrap">
                               {new Date(order.order_date).toLocaleString()}
                             </td>
@@ -458,31 +554,34 @@ function Reports() {
                         ))}
                       </tbody>
                     </table>
-                  </div>
-                  <div className="lg:hidden space-y-3">
-                    {report.orders.map((order) => (
-                      <div key={order.id} className="ui-mobile-card">
-                        <div className="flex justify-between gap-2 mb-2">
-                          <p className="font-semibold text-gray-900 break-words">{order.product_name}</p>
-                          <p className={`font-bold shrink-0 ${isUtangUnpaid(order) ? 'text-amber-700' : 'text-green-700'}`}>
-                            {formatMoney(order.total_amount)}
-                          </p>
-                        </div>
-                        <p className="text-xs text-gray-500">{new Date(order.order_date).toLocaleString()}</p>
-                        <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
-                          <div><span className="text-gray-500">Qty:</span> {order.quantity}</div>
-                          <div><span className="text-gray-500">Size:</span> {order.size ? `EU ${order.size}` : '—'}</div>
-                          <div><span className="text-gray-500">Staff:</span> {order.staff_name || '—'}</div>
-                          <div><span className="text-gray-500">Payment:</span> {isUtangPayment(order.payment_method) ? `${formatPaymentMethod(order.payment_method)}${isUtangPaid(order) ? ' (Paid)' : isUtangPartial(order) ? ` (Partial · ${formatMoney(getUtangRemaining(order))} left)` : ' (Pending)'}` : formatPaymentMethod(order.payment_method)}</div>
-                          <div><span className="text-gray-500">Utang:</span> {order.debtor_name || '—'}</div>
-                          <div><span className="text-gray-500">Discount:</span> {Number(order.discount) > 0 ? formatMoney(order.discount) : '—'}</div>
-                        </div>
+                  }
+                  mobile={report.orders.map((order) => (
+                    <div key={order.id} className="ui-mobile-card">
+                      <div className="flex justify-between gap-2 mb-2">
+                        <p className="font-semibold text-gray-900 break-words min-w-0">{order.product_name}</p>
+                        <p className={`font-bold shrink-0 ${isUtangUnpaid(order) ? 'text-amber-700' : 'text-green-700'}`}>
+                          {formatMoney(order.total_amount)}
+                        </p>
                       </div>
-                    ))}
-                  </div>
-                </>
+                      <p className="text-xs text-gray-500">{new Date(order.order_date).toLocaleString()}</p>
+                      <div className="grid grid-cols-2 gap-x-3 gap-y-2 mt-3 pt-3 border-t border-gray-100 text-sm">
+                        <div><span className="text-gray-500">Qty:</span> {order.quantity}</div>
+                        <div><span className="text-gray-500">Size:</span> {order.size ? `EU ${order.size}` : '—'}</div>
+                        <div><span className="text-gray-500">Staff:</span> {order.staff_name || '—'}</div>
+                        <div className="col-span-2">
+                          <span className="text-gray-500">Payment:</span>{' '}
+                          {isUtangPayment(order.payment_method)
+                            ? `${formatPaymentMethod(order.payment_method)}${isUtangPaid(order) ? ' (Paid)' : isUtangPartial(order) ? ` (Partial · ${formatMoney(getUtangRemaining(order))} left)` : ' (Pending)'}`
+                            : formatPaymentMethod(order.payment_method)}
+                        </div>
+                        <div><span className="text-gray-500">Utang:</span> {order.debtor_name || '—'}</div>
+                        <div><span className="text-gray-500">Discount:</span> {Number(order.discount) > 0 ? formatMoney(order.discount) : '—'}</div>
+                      </div>
+                    </div>
+                  ))}
+                />
               )}
-            </div>
+            </section>
           </>
         )}
       </div>

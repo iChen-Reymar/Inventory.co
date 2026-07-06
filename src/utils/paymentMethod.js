@@ -30,6 +30,25 @@ export function isUtangPartial(order) {
     && getUtangRemaining(order) > 0.001
 }
 
+export function parseUtangPaymentHistory(order) {
+  const raw = order?.utang_payment_history
+  if (!raw) return []
+  if (Array.isArray(raw)) return raw
+  try {
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+export function formatPartialPaymentDate(iso) {
+  if (!iso) return '—'
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return '—'
+  return date.toLocaleString()
+}
+
 export function formatPaymentMethod(method) {
   switch (method) {
     case 'utang':

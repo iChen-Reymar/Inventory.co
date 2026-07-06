@@ -1,5 +1,5 @@
 import { localDatabase, generateId } from './localDatabase'
-import { isUtangPayment, getUtangPaidAmount, getUtangRemaining } from '../utils/paymentMethod'
+import { isUtangPayment, getUtangPaidAmount, getUtangRemaining, parseUtangPaymentHistory } from '../utils/paymentMethod'
 import { notifyInventoryUpdated } from '../utils/inventoryEvents'
 
 async function enrichOrders(orders) {
@@ -67,6 +67,7 @@ export const orderService = {
         utang_paid_at: null,
         utang_paid_method: null,
         utang_paid_amount: 0,
+        utang_payment_history: null,
         stock_deducted: false,
         order_date: order.order_date || new Date().toISOString()
       }
@@ -164,13 +165,24 @@ export const orderService = {
         }
       }
 
+      const paidAt = new Date().toISOString()
+      const paymentHistory = [
+        ...parseUtangPaymentHistory(existing),
+        {
+          amount: payAmount,
+          method: paymentMethod || 'cash',
+          paid_at: paidAt
+        }
+      ]
+
       const data = {
         ...existing,
         id,
         utang_paid_amount: newPaidAmount,
         utang_paid: fullyPaid,
-        utang_paid_at: fullyPaid ? new Date().toISOString() : existing.utang_paid_at,
+        utang_paid_at: fullyPaid ? paidAt : existing.utang_paid_at,
         utang_paid_method: paymentMethod || 'cash',
+        utang_payment_history: paymentHistory,
         stock_deducted: existing.stock_deducted || (fullyPaid && !!existing.product_id)
       }
       await localDatabase.saveOrder(data)

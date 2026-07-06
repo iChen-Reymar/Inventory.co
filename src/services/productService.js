@@ -48,6 +48,7 @@ export const productService = {
         image: product.image || null,
         barcode: product.barcode || null,
         sizes: Object.keys(sizes).length > 0 ? sizes : null,
+        product_type: product.product_type || 'shoes',
         created_at: new Date().toISOString()
       }
 

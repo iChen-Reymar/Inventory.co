@@ -276,6 +276,7 @@ function migrateSchema() {
   if (getTableColumns('products').length > 0) {
     addColumnIfMissing('products', 'barcode', 'TEXT')
     addColumnIfMissing('products', 'sizes', 'TEXT')
+  addColumnIfMissing('products', 'product_type', "TEXT DEFAULT 'shoes'")
     addColumnIfMissing('products', 'cost', 'REAL DEFAULT 0')
     if (hasColumn('products', 'barcode')) {
       runSafe('products-barcode-index', () => db.run('CREATE INDEX IF NOT EXISTS idx_products_barcode ON products(barcode)'))
@@ -297,6 +298,7 @@ function migrateSchema() {
   addColumnIfMissing('orders', 'utang_paid_at', 'TEXT')
   addColumnIfMissing('orders', 'utang_paid_method', 'TEXT')
   addColumnIfMissing('orders', 'utang_paid_amount', 'REAL DEFAULT 0')
+  addColumnIfMissing('orders', 'utang_payment_history', 'TEXT')
   addColumnIfMissing('orders', 'stock_deducted', 'INTEGER DEFAULT 0')
 
   if (hasColumn('orders', 'stock_deducted') && !getMetaValue('orders_stock_deducted_backfill')) {
@@ -389,6 +391,7 @@ function rowToProduct(row) {
     image: row.image,
     barcode: row.barcode || null,
     sizes: parseProductSizes(row.sizes),
+    product_type: row.product_type || 'shoes',
     created_at: row.created_at
   }
 }
@@ -443,6 +446,7 @@ function rowToOrder(row) {
     utang_paid_at: row.utang_paid_at || null,
     utang_paid_method: row.utang_paid_method || null,
     utang_paid_amount: row.utang_paid_amount ?? 0,
+    utang_payment_history: row.utang_payment_history || null,
     stock_deducted: !!row.stock_deducted,
     order_date: row.order_date
   }
@@ -875,8 +879,8 @@ export const localDatabase = {
     const sizesJson = product.sizes ? JSON.stringify(product.sizes) : null
     run(
       `INSERT OR REPLACE INTO products
-        (id, name, stock, price, cost, status, category_id, category_name, image, barcode, sizes, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (id, name, stock, price, cost, status, category_id, category_name, image, barcode, sizes, product_type, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         product.id,
         product.name,
@@ -889,6 +893,7 @@ export const localDatabase = {
         product.image,
         product.barcode || null,
         sizesJson,
+        product.product_type || 'shoes',
         product.created_at
       ]
     )
@@ -1070,8 +1075,8 @@ export const localDatabase = {
   async saveOrder(order) {
     run(
       `INSERT OR REPLACE INTO orders
-        (id, customer_id, product_id, product_name, quantity, unit_price, list_unit_price, discount, total_amount, staff_id, staff_name, payment_method, size, debtor_name, utang_paid, utang_paid_at, utang_paid_method, utang_paid_amount, stock_deducted, order_date)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (id, customer_id, product_id, product_name, quantity, unit_price, list_unit_price, discount, total_amount, staff_id, staff_name, payment_method, size, debtor_name, utang_paid, utang_paid_at, utang_paid_method, utang_paid_amount, utang_payment_history, stock_deducted, order_date)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         order.id,
         order.customer_id,
@@ -1091,6 +1096,11 @@ export const localDatabase = {
         order.utang_paid_at || null,
         order.utang_paid_method || null,
         order.utang_paid_amount ?? 0,
+        order.utang_payment_history
+          ? (typeof order.utang_payment_history === 'string'
+            ? order.utang_payment_history
+            : JSON.stringify(order.utang_payment_history))
+          : null,
         order.stock_deducted ? 1 : 0,
         order.order_date
       ]

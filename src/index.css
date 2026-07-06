@@ -79,6 +79,88 @@
     @apply bg-white border border-gray-200 rounded-md p-3 sm:p-4 shadow-sm;
   }
 
+  .report-section {
+    @apply overflow-hidden;
+  }
+
+  .report-count-badge {
+    @apply inline-flex items-center justify-center min-w-[2rem] h-7 px-2.5 rounded-full text-xs font-semibold tabular-nums;
+  }
+
+  .report-count-badge--default {
+    @apply bg-gray-100 text-gray-700;
+  }
+
+  .report-count-badge--utang {
+    @apply bg-amber-100 text-amber-800;
+  }
+
+  .report-count-badge--staff {
+    @apply bg-indigo-100 text-indigo-800;
+  }
+
+  .report-count-badge--transactions {
+    @apply bg-blue-100 text-blue-800;
+  }
+
+  .report-scroll-wrap--active {
+    @apply overflow-y-auto overflow-x-auto rounded-lg border border-gray-100/80 bg-white/60;
+    max-height: min(22rem, 55vh);
+    -webkit-overflow-scrolling: touch;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 163, 175, 0.6) transparent;
+  }
+
+  .report-scroll-wrap--active::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .report-scroll-wrap--active::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full;
+  }
+
+  .report-scroll-wrap--active.report-scroll-wrap--cards {
+    max-height: min(28rem, 62vh);
+  }
+
+  .report-scroll-wrap--active.report-scroll-wrap--staff {
+    max-height: min(16rem, 40vh);
+  }
+
+  .report-table thead th {
+    @apply sticky top-0 z-10 bg-gray-50/95 backdrop-blur-sm text-gray-600 font-semibold uppercase tracking-wide text-[0.65rem] sm:text-xs;
+  }
+
+  .report-table tbody tr {
+    @apply transition-colors hover:bg-gray-50/80;
+  }
+
+  .report-table tbody tr:nth-child(even) {
+    @apply bg-white;
+  }
+
+  .report-table tbody tr:nth-child(odd) {
+    @apply bg-gray-50/40;
+  }
+
+  .report-scroll-hint {
+    @apply text-xs text-gray-500 mb-3 flex items-center gap-1.5;
+  }
+
+  .report-scroll-fade {
+    @apply pointer-events-none absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white via-white/80 to-transparent rounded-b-lg;
+  }
+
+  .report-stat-card {
+    @apply rounded-xl border p-4 sm:p-5 shadow-sm transition-shadow hover:shadow-md;
+  }
+
+  .report-period-btn {
+    @apply ui-btn px-3 sm:px-4 text-xs sm:text-sm rounded-full;
+  }
+
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }

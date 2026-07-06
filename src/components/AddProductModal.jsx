@@ -9,6 +9,12 @@ import {
   normalizeSizes,
   sizesToFormState
 } from '../utils/shoeSizes'
+import {
+  PRODUCT_TYPE_SHOES,
+  PRODUCT_TYPE_OTHER,
+  PRODUCT_TYPES,
+  inferProductType
+} from '../utils/productType'
 
 function AddProductModal({
   isOpen,
@@ -30,19 +36,28 @@ function AddProductModal({
   const [sizeStock, setSizeStock] = useState(createEmptySizeStock())
   const [legacyStock, setLegacyStock] = useState('')
   const [useLegacyStock, setUseLegacyStock] = useState(false)
+  const [productType, setProductType] = useState(PRODUCT_TYPE_SHOES)
+  const [otherStock, setOtherStock] = useState('')
   const [scannerOpen, setScannerOpen] = useState(false)
   const [scanMessage, setScanMessage] = useState('')
   const [lookingUp, setLookingUp] = useState(false)
   const [matchedProductId, setMatchedProductId] = useState(null)
   const nameInputRef = useRef(null)
 
-  const totalStock = useLegacyStock
-    ? parseInt(legacyStock, 10) || 0
-    : getTotalStockFromSizes(sizeStock)
+  const isOtherProduct = productType === PRODUCT_TYPE_OTHER
+  const stockUnit = isOtherProduct ? 'pcs' : 'pairs'
+
+  const totalStock = isOtherProduct
+    ? parseInt(otherStock, 10) || 0
+    : useLegacyStock
+      ? parseInt(legacyStock, 10) || 0
+      : getTotalStockFromSizes(sizeStock)
 
   useEffect(() => {
     if (editingProduct) {
+      const inferredType = inferProductType(editingProduct)
       const hasSizes = editingProduct.sizes && Object.keys(normalizeSizes(editingProduct.sizes)).length > 0
+      setProductType(inferredType)
       setFormData({
         name: editingProduct.name || '',
         cost: editingProduct.cost ?? '',
@@ -52,9 +67,11 @@ function AddProductModal({
         barcode: editingProduct.barcode || ''
       })
       setSizeStock(sizesToFormState(editingProduct.sizes))
-      setUseLegacyStock(!hasSizes)
-      setLegacyStock(!hasSizes ? String(editingProduct.stock ?? '') : '')
+      setUseLegacyStock(!hasSizes && inferredType === PRODUCT_TYPE_SHOES)
+      setLegacyStock(!hasSizes && inferredType === PRODUCT_TYPE_SHOES ? String(editingProduct.stock ?? '') : '')
+      setOtherStock(inferredType === PRODUCT_TYPE_OTHER ? String(editingProduct.stock ?? '') : '')
     } else {
+      setProductType(PRODUCT_TYPE_SHOES)
       setFormData({
         name: '',
         cost: '',
@@ -66,6 +83,7 @@ function AddProductModal({
       setSizeStock(createEmptySizeStock())
       setUseLegacyStock(false)
       setLegacyStock('')
+      setOtherStock('')
     }
     setScanMessage('')
     setScannerOpen(false)
@@ -100,6 +118,8 @@ function AddProductModal({
 
       if (result.product) {
         const product = result.product
+        const inferredType = inferProductType(product)
+        setProductType(inferredType)
         setFormData({
           name: product.name || '',
           cost: isAdmin ? (product.cost ?? '') : '',
@@ -111,12 +131,14 @@ function AddProductModal({
         setSizeStock(sizesToFormState(product.sizes))
         setUseLegacyStock(false)
         setLegacyStock('')
+        setOtherStock(inferredType === PRODUCT_TYPE_OTHER ? String(product.stock ?? '') : '')
         setMatchedProductId(product.id)
         setScanMessage(
           'Existing product found. Name, price, sizes, category, and image filled automatically.'
         )
       } else if (result.name) {
         setMatchedProductId(null)
+        setProductType(PRODUCT_TYPE_SHOES)
         setFormData((prev) => ({
           ...prev,
           name: result.name,
@@ -125,9 +147,11 @@ function AddProductModal({
         setSizeStock(createEmptySizeStock())
         setUseLegacyStock(false)
         setLegacyStock('')
+        setOtherStock('')
         setScanMessage(`New product: ${result.name}. Enter sizes, price, and category.`)
       } else {
         setMatchedProductId(null)
+        setProductType(PRODUCT_TYPE_SHOES)
         setFormData((prev) => ({
           ...prev,
           name: '',
@@ -152,12 +176,13 @@ function AddProductModal({
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    const sizes = useLegacyStock ? {} : normalizeSizes(sizeStock)
+    const sizes = isOtherProduct || useLegacyStock ? {} : normalizeSizes(sizeStock)
     if (formData.name && totalStock > 0 && formData.category) {
       const productData = {
         ...formData,
         stock: totalStock,
         sizes: Object.keys(sizes).length > 0 ? sizes : null,
+        product_type: productType,
         price: parseFloat(formData.price) || 0,
         image: formData.image || '',
         barcode: formData.barcode || null,
@@ -180,6 +205,8 @@ function AddProductModal({
       setSizeStock(createEmptySizeStock())
       setUseLegacyStock(false)
       setLegacyStock('')
+      setOtherStock('')
+      setProductType(PRODUCT_TYPE_SHOES)
       setScanMessage('')
       onClose()
     }
@@ -251,10 +278,60 @@ function AddProductModal({
               </div>
 
               <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Product Type *</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {PRODUCT_TYPES.map((type) => (
+                    <button
+                      key={type.id}
+                      type="button"
+                      onClick={() => {
+                        setProductType(type.id)
+                        if (type.id === PRODUCT_TYPE_OTHER) {
+                          setUseLegacyStock(false)
+                          setLegacyStock('')
+                          setSizeStock(createEmptySizeStock())
+                        } else {
+                          setOtherStock('')
+                        }
+                      }}
+                      className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
+                        productType === type.id
+                          ? 'border-primary-blue bg-blue-50 text-primary-blue'
+                          : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      {type.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {isOtherProduct ? (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-gray-700">Stock Quantity *</label>
+                    <span className="text-sm text-gray-600">
+                      Total: <span className="font-semibold text-gray-900">{totalStock}</span> {stockUnit}
+                    </span>
+                  </div>
+                  <input
+                    type="number"
+                    value={otherStock}
+                    onChange={(e) => setOtherStock(e.target.value)}
+                    placeholder="Enter quantity (e.g., 10)"
+                    min="1"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-primary-blue"
+                  />
+                  <p className="text-sm text-gray-500 mt-2">
+                    For bags, socks, caps, and other items without shoe sizes.
+                  </p>
+                </div>
+              ) : (
+              <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-sm font-medium text-gray-700">EU Shoe Sizes *</label>
                   <span className="text-sm text-gray-600">
-                    Total: <span className="font-semibold text-gray-900">{totalStock}</span> pairs
+                    Total: <span className="font-semibold text-gray-900">{totalStock}</span> {stockUnit}
                   </span>
                 </div>
                 {useLegacyStock ? (
@@ -320,6 +397,7 @@ function AddProductModal({
                   </>
                 )}
               </div>
+              )}
 
               <div className={isAdmin ? 'grid grid-cols-1 sm:grid-cols-2 gap-4' : ''}>
                 {isAdmin && (

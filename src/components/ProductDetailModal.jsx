@@ -1,10 +1,13 @@
 import { sortSizeEntries, formatSizeLabel } from '../utils/shoeSizes'
+import { isShoeProduct, getStockUnit } from '../utils/productType'
 
 function ProductDetailModal({ isOpen, onClose, product, isAdmin = false }) {
   if (!isOpen || !product) return null
 
   const sizeEntries = sortSizeEntries(product.sizes)
   const hasSizes = sizeEntries.length > 0
+  const shoeProduct = isShoeProduct(product)
+  const stockUnit = getStockUnit(product)
 
   return (
     <div className="ui-modal-shell">
@@ -46,7 +49,7 @@ function ProductDetailModal({ isOpen, onClose, product, isAdmin = false }) {
             )}
             <div>
               <p className="text-gray-500 mb-1">Total Stock</p>
-              <p className="font-medium text-gray-900">{product.stock} pairs</p>
+              <p className="font-medium text-gray-900">{product.stock} {stockUnit}</p>
             </div>
             <div>
               <p className="text-gray-500 mb-1">Status</p>
@@ -54,6 +57,7 @@ function ProductDetailModal({ isOpen, onClose, product, isAdmin = false }) {
             </div>
           </div>
 
+          {shoeProduct && (
           <div>
             <h3 className="text-sm font-semibold text-gray-700 mb-3">Available EU Sizes</h3>
             {hasSizes ? (
@@ -75,6 +79,7 @@ function ProductDetailModal({ isOpen, onClose, product, isAdmin = false }) {
               </p>
             )}
           </div>
+          )}
         </div>
       </div>
     </div>

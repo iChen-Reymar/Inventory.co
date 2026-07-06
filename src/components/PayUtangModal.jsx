@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { orderService } from '../services/orderService'
-import { formatPaymentMethod, getUtangPaidAmount, getUtangRemaining } from '../utils/paymentMethod'
+import { formatPaymentMethod, getUtangPaidAmount, getUtangRemaining, parseUtangPaymentHistory, formatPartialPaymentDate } from '../utils/paymentMethod'
 
 function PayUtangModal({ isOpen, onClose, order, onPaid }) {
   const [paymentType, setPaymentType] = useState('full')
@@ -24,6 +24,7 @@ function PayUtangModal({ isOpen, onClose, order, onPaid }) {
   const totalAmount = Number(order.total_amount) || 0
   const alreadyPaid = getUtangPaidAmount(order)
   const remaining = getUtangRemaining(order)
+  const paymentHistory = parseUtangPaymentHistory(order)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -89,6 +90,19 @@ function PayUtangModal({ isOpen, onClose, order, onPaid }) {
               <span className="text-gray-600 font-medium">Remaining</span>
               <span className="font-bold text-amber-700">{formatMoney(remaining)}</span>
             </div>
+            {paymentHistory.length > 0 && (
+              <div className="border-t border-amber-200 pt-2 space-y-1">
+                <p className="text-xs font-medium text-gray-600">Partial Payments</p>
+                {paymentHistory.map((payment, index) => (
+                  <div key={`${payment.paid_at}-${index}`} className="flex justify-between gap-2 text-xs">
+                    <span className="text-gray-500">{formatPartialPaymentDate(payment.paid_at)}</span>
+                    <span className="font-medium text-green-700">
+                      {formatMoney(payment.amount)} · {formatPaymentMethod(payment.method)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>
